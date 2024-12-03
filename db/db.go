@@ -2,10 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
-	_ "github.com/lib/pq"
+	_ "modernc.org/sqlite"
 )
 
 var DB *sql.DB
@@ -13,27 +12,18 @@ var DB *sql.DB
 // Инициализация базы данных
 func InitDB() {
 	var err error
-
-	// Подключение к PostgreSQL
-	connStr := "host=localhost port=5432 user=postgres password=password dbname=back sslmode=disable"
-	DB, err = sql.Open("postgres", connStr)
+	DB, err = sql.Open("sqlite", "app.db")
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
 
-	// Проверка соединения
-	if err = DB.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
-	}
-
-	fmt.Println("Connected to PostgreSQL!")
-
 	// Создаем таблицы, если они еще не существуют
+	// Для каждой таблицы выполняем отдельную команду CREATE TABLE IF NOT EXISTS
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS pages (
-			id SERIAL PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			html TEXT NOT NULL,
-			processed BOOLEAN NOT NULL DEFAULT false
+			processed BOOLEAN NOT NULL DEFAULT 0
 		);
 	`)
 	if err != nil {
@@ -42,9 +32,9 @@ func InitDB() {
 
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS answers (
-			id SERIAL PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			answer TEXT NOT NULL,
-			processed BOOLEAN DEFAULT false
+			processed BOOLEAN DEFAULT 0
 		);
 	`)
 	if err != nil {
@@ -53,9 +43,9 @@ func InitDB() {
 
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS submit_requests (
-			id SERIAL PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			request TEXT NOT NULL,
-			processed BOOLEAN NOT NULL DEFAULT false
+			processed BOOLEAN NOT NULL DEFAULT 0
 		);
 	`)
 	if err != nil {
